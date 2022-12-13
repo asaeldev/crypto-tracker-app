@@ -48,7 +48,7 @@ export default function SignUp() {
 
   const handleSignInClick = (event) => {
     event.preventDefault();
-    navigate("/SignIn");
+    navigate("/");
   };
 
   return (

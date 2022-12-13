@@ -20,6 +20,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import classes from "./EnhancedTable.module.css";
 import { visuallyHidden } from "@mui/utils";
 
 function descendingComparator(a, b, orderBy) {
@@ -52,39 +53,6 @@ function stableSort(array, comparator) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-const headCells = [
-  {
-    id: "name",
-    numeric: false,
-    disablePadding: true,
-    label: "Name",
-  },
-  {
-    id: "price",
-    numeric: true,
-    disablePadding: false,
-    label: "Price",
-  },
-  {
-    id: "1hrp",
-    numeric: true,
-    disablePadding: false,
-    label: "1h %",
-  },
-  {
-    id: "24hp",
-    numeric: true,
-    disablePadding: false,
-    label: "24h %",
-  },
-  {
-    id: "circulatingSupply",
-    numeric: true,
-    disablePadding: false,
-    label: "Circulating supply",
-  },
-];
-
 function EnhancedTableHead(props) {
   const {
     onSelectAllClick,
@@ -93,6 +61,7 @@ function EnhancedTableHead(props) {
     numSelected,
     rowCount,
     onRequestSort,
+    columns,
   } = props;
 
   const createSortHandler = (property) => (event) => {
@@ -104,16 +73,16 @@ function EnhancedTableHead(props) {
       <TableRow>
         <TableCell padding="checkbox">
           <Checkbox
-            color="primary"
+            color="warning"
             indeterminate={numSelected > 0 && numSelected < rowCount}
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={onSelectAllClick}
             inputProps={{
-              "aria-label": "select all desserts",
+              "aria-label": "Seleccionar todas las monedas",
             }}
           />
         </TableCell>
-        {headCells.map((headCell) => (
+        {columns.map((headCell) => (
           <TableCell
             key={headCell.id}
             align={headCell.numeric ? "right" : "left"}
@@ -173,7 +142,8 @@ function EnhancedTableToolbar(props) {
           variant="subtitle1"
           component="div"
         >
-          {numSelected} selected
+          {numSelected}{" "}
+          {numSelected > 1 ? "monedas seleccionadas" : "moneda seleccionada"}
         </Typography>
       ) : (
         <Typography
@@ -208,15 +178,17 @@ EnhancedTableToolbar.propTypes = {
 };
 
 export default function EnhancedTable(props) {
-  const { title } = props;
-  const { rows } = props;
+  const { title, rows, columns, selected, onSelected } = props;
 
   const [order, setOrder] = React.useState("asc");
   const [orderBy, setOrderBy] = React.useState("calories");
-  const [selected, setSelected] = React.useState([]);
   const [page, setPage] = React.useState(0);
   const [dense, setDense] = React.useState(false);
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(25);
+
+  const handleSetSelected = (newSelected) => {
+    onSelected(newSelected);
+  };
 
   const handleRequestSort = (event, property) => {
     const isAsc = orderBy === property && order === "asc";
@@ -227,10 +199,10 @@ export default function EnhancedTable(props) {
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
       const newSelected = rows.map((n) => n.name);
-      setSelected(newSelected);
+      handleSetSelected(newSelected);
       return;
     }
-    setSelected([]);
+    handleSetSelected([]);
   };
 
   const handleClick = (event, name) => {
@@ -250,7 +222,7 @@ export default function EnhancedTable(props) {
       );
     }
 
-    setSelected(newSelected);
+    handleSetSelected(newSelected);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -273,7 +245,7 @@ export default function EnhancedTable(props) {
     page > 0 ? Math.max(0, (1 + page) * rowsPerPage - rows.length) : 0;
 
   return (
-    <Box sx={{ width: "100%" }}>
+    <Box sx={{ width: "100%", marginTop: "2rem" }}>
       <Paper sx={{ width: "100%", mb: 2 }}>
         <EnhancedTableToolbar title={title} numSelected={selected.length} />
         <TableContainer>
@@ -283,6 +255,7 @@ export default function EnhancedTable(props) {
             size={dense ? "small" : "medium"}
           >
             <EnhancedTableHead
+              columns={columns}
               numSelected={selected.length}
               order={order}
               orderBy={orderBy}
@@ -311,7 +284,7 @@ export default function EnhancedTable(props) {
                     >
                       <TableCell padding="checkbox">
                         <Checkbox
-                          color="primary"
+                          color="warning"
                           checked={isItemSelected}
                           inputProps={{
                             "aria-labelledby": labelId,
@@ -324,12 +297,20 @@ export default function EnhancedTable(props) {
                         scope="row"
                         padding="none"
                       >
-                        {row.name}
+                        {row.asset_id}
                       </TableCell>
-                      <TableCell align="right">{row.calories}</TableCell>
-                      <TableCell align="right">{row.fat}</TableCell>
-                      <TableCell align="right">{row.carbs}</TableCell>
-                      <TableCell align="right">{row.protein}</TableCell>
+                      <TableCell align="right">{row.name}</TableCell>
+                      <TableCell align="right">
+                        $
+                        {!row.hasOwnProperty("price_usd")
+                          ? "1.00"
+                          : Number(row.price_usd).toFixed(2)}
+                      </TableCell>
+                      <TableCell align="right">{row.volume_1hrs_usd}</TableCell>
+                      <TableCell align="right">{row.volume_1mth_usd}</TableCell>
+                      <TableCell align="right">
+                        {row.type_is_crypto === 1 ? "Sí" : "No"}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -357,7 +338,7 @@ export default function EnhancedTable(props) {
       </Paper>
       <FormControlLabel
         control={<Switch checked={dense} onChange={handleChangeDense} />}
-        label="Dense padding"
+        label="Compactar tabla"
       />
     </Box>
   );

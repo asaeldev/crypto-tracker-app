@@ -1,22 +1,25 @@
 import logo from "./logo.svg";
 import "./App.css";
-import Navbar from "./components/Navbar";
-import EnhancedTable from "./components/EnhancedTable";
+import Navbar from "./components/Navbar/Navbar";
+import EnhancedTable from "./components/EnhancedTable/EnhancedTable";
 import { ThemeProvider } from "@emotion/react";
 import { createTheme } from "@mui/material/styles";
 import { Routes, Route } from "react-router";
 import { BrowserRouter } from "react-router-dom";
+import { AuthContext, AuthContextProvider } from "./store/auth.context";
 
 import Home from "./pages/Home";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
+import { useContext, useEffect } from "react";
+import MyAlerts from "./pages/MyAlerts";
 
 const theme = createTheme({
   palette: {
     primary: {
       light: "#757ce8",
       main: "#fafafa",
-      dark: "#002884",
+      dark: "#c7c7c7",
       contrastText: "#000000",
     },
     secondary: {
@@ -34,13 +37,24 @@ const theme = createTheme({
 });
 
 function App() {
+  const authContext = useContext(AuthContext);
+
   return (
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />}></Route>
-          <Route path="/SignIn" element={<SignIn />}></Route>
-          <Route path="/SignUp" element={<SignUp />}></Route>
+          {!authContext.isLoggedIn && (
+            <Route path="/" element={<SignIn />}></Route>
+          )}
+          {authContext.isLoggedIn && (
+            <Route path="/" element={<Home />}></Route>
+          )}
+          {authContext.isLoggedIn && (
+            <Route path="/alerts" element={<MyAlerts />}></Route>
+          )}
+          {!authContext.isLoggedIn && (
+            <Route path="/SignUp" element={<SignUp />}></Route>
+          )}
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

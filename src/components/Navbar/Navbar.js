@@ -12,12 +12,16 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 
-import logo from "../assets/logo-250x100.png";
-
-const pages = ["Home", "My Coins", "My Alerts"];
-const settings = ["Profile", "Account", "Logout"];
+import logo from "../../assets/logo-250x100.png";
+import { useNavigate } from "react-router";
+import { AuthContext } from "../../store/auth.context";
+import classes from "./Navbar.module.css";
+const pages = ["Inicio", "Mis alertas"];
+const settings = ["Mi perfil", "Mi cuenta", "Cerrar sesión"];
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const authContext = React.useContext(AuthContext);
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
 
@@ -28,16 +32,28 @@ const Navbar = () => {
     setAnchorElUser(event.currentTarget);
   };
 
-  const handleCloseNavMenu = () => {
+  const handleCloseNavMenu = (event) => {
+    const menu = event.target.textContent;
     setAnchorElNav(null);
+    if (menu === "Inicio") {
+      navigate("/");
+    } else if (menu === "Mis alertas") {
+      navigate("/alerts");
+    }
   };
 
-  const handleCloseUserMenu = () => {
+  const handleCloseUserMenu = (setting) => {
     setAnchorElUser(null);
+    if (setting === "Cerrar sesión") {
+      setTimeout(() => {
+        authContext.logout();
+        navigate("/");
+      }, 2500);
+    }
   };
 
   return (
-    <AppBar position="static" color="primary">
+    <AppBar className={classes.appBar} position="static" color="primary">
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <img src={logo} alt="logo" width={120} />
@@ -71,7 +87,7 @@ const Navbar = () => {
               }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
+                <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}>
                   <Typography textAlign="center" color="primary.contrastText">
                     {page}
                   </Typography>
@@ -115,7 +131,10 @@ const Navbar = () => {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
+                <MenuItem
+                  key={setting}
+                  onClick={() => handleCloseUserMenu(setting)}
+                >
                   <Typography textAlign="center" color="primary.contrastText">
                     {setting}
                   </Typography>

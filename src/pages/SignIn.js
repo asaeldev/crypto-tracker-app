@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useContext } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -14,6 +14,7 @@ import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Navigate } from "react-router";
 import { useNavigate } from "react-router-dom";
+import { AuthContext, AuthContextProvider } from "../store/auth.context";
 
 function Copyright(props) {
   return (
@@ -36,15 +37,36 @@ function Copyright(props) {
 const theme = createTheme();
 
 export default function SignIn() {
+  const authContext = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    console.log({
+    const url = "http://localhost:8000/api/v1/customers/login";
+    const body = {
       email: data.get("email"),
       password: data.get("password"),
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
+
+    const responseData = await response.json();
+    console.log(responseData);
+
+    if (responseData.hasOwnProperty("token")) {
+      authContext.login(responseData.token);
+      console.log("here");
+      setTimeout(() => {
+        navigate("/");
+      }, 2500);
+    }
   };
 
   const handleRegisterClick = (event) => {
